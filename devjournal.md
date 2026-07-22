@@ -4,9 +4,27 @@ A central journal tracking the design, local installation, configuration, and ar
 
 ---
 
+## 📝 Roadmap & Todo List
+
+- [ ] Get static base data from OSM or UDP using OAF with Go
+- [ ] Implement Kafka producer for real-time event streaming
+- [ ] Setup Elasticsearch index mapping for spatial queries
+- [ ] Configure Kibana dashboards for real-time visualization
+- [ ] Implement unit tests for spatial data transformation logic
+- [ ] Implement integration tests for Kafka-to-Elasticsearch pipeline
+- [ ] Setup CI/CD pipeline for automated deployment to staging
+- [ ] Monitoring and alerting with Prometheus and Grafana
+- [ ] Document API endpoints for spatial search queries
+- [ ] Setup automated backup strategy for PostGIS and Elasticsearch data
+- [ ] Implement authentication and authorization for API endpoints
+- [ ] Implement rate limiting and request logging for the API
+
+---
+
 ## 🛠️ Installation & Environment Setup
 
 ### 1. Docker & Docker Compose
+
 Install and configure the containerized runtime environment.
 
 ```bash
@@ -21,6 +39,7 @@ sudo usermod -aG docker $USER
 ```
 
 ### 2. Initialize Go Module & Dependencies
+
 Set up the core data ingestion and processing services.
 
 ```bash
@@ -39,6 +58,7 @@ go get github.com/elastic/go-elasticsearch/v8
 ## 🗄️ Database Initialization (PostgreSQL + PostGIS)
 
 ### 1. Connect to PostgreSQL
+
 Access the database container via `psql`.
 
 ```bash
@@ -46,6 +66,7 @@ docker exec -it portfolio-postgres psql -U admin -d geodb
 ```
 
 ### 2. Enable PostGIS & Create Schema
+
 Execute the following SQL queries to enable spatial features and define the geo-features table schema.
 
 ```sql
@@ -69,33 +90,42 @@ CREATE INDEX idx_geo_features_geom ON geo_features USING GIST(geom);
 ## 🏗️ Architecture Blueprint
 
 ```text
-       ┌────────────────────────┐
-       │   German Gov OAF API   │
-       └───────────┬────────────┘
-                   │
-                   ▼
-       ┌────────────────────────┐
-       │  Go Ingestion Worker   │◀─── (Concurrent HTTP Fetching)
-       └───────────┬────────────┘
-                   │
-         ┌─────────┴─────────┐
-         ▼ (Write Raw/Geom)  ▼ (Write Search Docs)
-   ┌────────────┐      ┌───────────────┐
-   │ PostgreSQL │      │ Elasticsearch │
-   │ (PostGIS)  │      │  (geo_shape)  │
-   └─────┬──────┘      └───────┬───────┘
-         │                     │
-         └─────────┬───────────┘
-                   │
-                   ▼
-       ┌────────────────────────┐
-       │      Go REST API       │
-       └───────────┬────────────┘
-                   │
-                   ▼
-       ┌────────────────────────┐
-       │ Frontend (React/Mapbox)│◀─── [ Kibana (Analytics Dashboard) ]
-       └────────────────────────┘
+
+
+                  ┌────────────────────────────────────────────────────────┐
+                  │                 REAL-TIME INGESTION LAYER              │
+                  └────────────────────────────────────────────────────────┘
+                                              │
+ ┌──────────────────────┐          ┌──────────────────────┐
+ │ GTFS-RT / GPS Stream │          │ OSM Minutely Diffs   │
+ └──────────┬───────────┘          └──────────┬───────────┘
+            │                                 │
+            └──────────────┬──────────────────┘
+                           │
+                           ▼
+              ┌─────────────────────────┐
+              │  Kafka Ingestion Topic  │  <-- Buffers incoming raw geospatial events
+              └────────────┬────────────┘
+                           │
+            ┌──────────────┴──────────────┐  (Distributed Goroutine Workers)
+            ▼                             ▼
+  ┌──────────────────┐          ┌──────────────────┐
+  │  Go Worker A     │          │  Go Worker B     │
+  │  (PostGIS Sink)  │          │  (Elastic Sink)  │
+  └─────────┬────────┘          └─────────┬────────┘
+            │                             │
+            ▼                             ▼
+  ┌──────────────────┐          ┌──────────────────┐
+  │ PostGIS Database │          │  Elasticsearch   │  <-- Powers Bounding-Box
+  │ (Spatial Joins)  │          │  (Geo-Aggs)      │      & Geo-Distance Search
+  └──────────────────┘          └─────────┬────────┘
+                                          │
+                                          ▼
+                                ┌──────────────────┐
+                                │ Kibana Dashboard │  <-- Live Heatmaps & Metrics
+                                └──────────────────┘
+
+
 ```
 
 ---
@@ -103,6 +133,7 @@ CREATE INDEX idx_geo_features_geom ON geo_features USING GIST(geom);
 ## 🚀 Quick Reference Commands
 
 ### Start Services
+
 Run the following command to spin up all backend containers (PostgreSQL, Elasticsearch, Kibana, etc.) in detached mode.
 
 ```bash
