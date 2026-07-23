@@ -6,7 +6,10 @@ A central journal tracking the design, local installation, configuration, and ar
 
 ## 📝 Roadmap & Todo List
 
-- [ ] Get static base data from OSM or UDP using OAF with Go
+- [x] Get static base data from OSM or UDP using wget
+- [x] insert data into PostgreSQL
+- [ ] check inserted data
+- [ ] real time streaming options
 - [ ] Implement Kafka producer for real-time event streaming
 - [ ] Setup Elasticsearch index mapping for spatial queries
 - [ ] Configure Kibana dashboards for real-time visualization
@@ -138,4 +141,20 @@ Run the following command to spin up all backend containers (PostgreSQL, Elastic
 
 ```bash
 sudo docker compose up -d
+
+
 ```
+
+## Next steps
+
+### get data
+
+Download OSM data for Hamburg at 'https://download.geofabrik.de/europe/germany/hamburg.html'
+
+```bash
+wget https://download.geofabrik.de/europe/germany/hamburg-latest.osm.pbf
+```
+
+### Information
+
+Everything about the pbf format: https://wiki.openstreetmap.org/wiki/PBF_Format
